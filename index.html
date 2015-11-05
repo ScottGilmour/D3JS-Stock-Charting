@@ -29,8 +29,8 @@
 			  shape-rendering: crispEdges;
 			}
 			
-			.controls {
-				margin: 5 5 5 5px;
+			.search {
+				margin: 10 5 0 5px;
 				height: auto;
 				width: auto;
 			}
@@ -39,7 +39,18 @@
 				text-transform: uppercase;
 			}
 
+			.statistics {
+				font-size: 0.5em;
+			}
+
+			#open, #close, #high, #low, #volume {
+				margin: 10 5 0 5px;
+				font-size: 4em;
+			}
 			
+			#simulate {
+				margin-top: 10px;
+			}
 
 			.grid .tick line {
 				stroke: lightgrey;
@@ -52,27 +63,107 @@
 		</style>
 	</head>
 	<body>
-		<div class="controls">
-		
-			<div id="search_field" class="ui icon labeled input">
-				<div class="ui label">
-			    	TSX
-			  	</div>
-			  	<input id="symbol_search_input" type="text" placeholder="GOOG" maxlength="4">
-			  	<i class="search icon"></i>
-			</div>
-			<button id="btn_chart" class="ui button">Chart</button>
-			<hr>
+
+		<div class="ui four column grid">
+		  <div class="row">
+		    <div class="column">
+			    <div class="search">
+			    	<div id="search_field" class="ui icon labeled input">
+						<div class="ui label">
+					    	TSX
+					  	</div>
+					  	<input id="symbol_search_input" type="text" placeholder="GOOG" maxlength="4">
+					  	<i class="search icon"></i>
+					</div>
+					<button id="btn_chart" class="ui button">Chart</button>
+			    </div>
+		    </div>
+		    <div class="column">
+		    	<div class="ui statistics">
+				  <div class="statistic">
+				    <div class="value" id="open">
+				      $000
+				    </div>
+				    <div class="label">
+				      Open
+				    </div>
+				  </div>
+				  <div class="statistic">
+				    <div class="value" id="close">
+				      $000
+				    </div>
+				    <div class="label">
+				      Close
+				    </div>
+				  </div>
+				  <div class="statistic">
+				    <div class="value" id="high">
+				      $000
+				    </div>
+				    <div class="label">
+				      High
+				    </div>
+				  </div>
+				  <div class="statistic">
+				    <div class="value" id="low">
+				      $000
+				    </div>
+				    <div class="label">
+				      Low
+				    </div>
+				  </div>
+				</div>
+		    </div>
+		    <div class="column">
+			
+		    	<div class="ui form">
+				  <div class="grouped fields">
+				    <label>Frequency</label>
+				    <div class="field">
+				      <div class="ui slider checkbox">
+				        <input type="radio" id="5s" name="throughput" checked="checked">
+				        <label>every 5 seconds</label>
+				      </div>
+				    </div>
+				    <div class="field">
+				      <div class="ui slider checkbox">
+				        <input type="radio" id="3s" name="throughput">
+				        <label>every 3 seconds</label>
+				      </div>
+				    </div>
+				  </div>
+				</div>
+
+		    </div>
+		    <div class="column">
+			    <div class="ui form">
+			    	<div class="grouped fields">
+			    		<div class="field">
+			    			<div id="simulate" class="ui slider checkbox">
+							  <input type="checkbox" id="simulatelive" name="newsletter">
+							  <label>Simulate live trading</label>
+							</div>
+			    		</div>
+
+			    		<div class="field">
+			    			<div id="simulate" class="ui slider checkbox">
+							  <input type="checkbox" id="simulatelive" name="newsletter">
+							  <label>Show Volume</label>
+							</div>
+			    		</div>
+			    	</div>
+			    </div>
+		    </div>
+		  </div>
 		</div>
+		<hr>
 		<div class="scrollable">
 			<svg class="chart">
-			
+				<div id="dimload" class="ui dimmer">
+			    	<div class="ui text loader">Loading</div>
+			  	</div>
 			</svg>	
 		</div>
-
-		
-
-
 	</body>
 
 </html>
