@@ -8,11 +8,14 @@ var main = {
 	url : 'http://query.yahooapis.com/v1/public/yql',
 	startDate : '2015-01-01',
 	endDate : '2015-06-01',
+	chartEndDay : 01,
+	chartEndMonth : 03,
+	chartEndYear : 2015, 
 	chartStartDay : 01,
 	chartStartMonth : 01,
 	chartStartYear : 2015, 
-	chartStartDate : null,
-	chartEndDate : '2015-06-06',
+	chartStartDate : '2015-00-00',
+	chartEndDate : '2015-06-01',
 	minCandleHeight : '5',
 	chart : null,
 	xAxis : null,
@@ -24,59 +27,100 @@ var main = {
 	barHeight : null,
 	yScale : null,
 	data : null,
-	
+	open : null,
+	close : null,
+	low : null,
+	high: null,
+	interval : null,
+	frequency : 5000,
+
+	increaseEndDay : function() {
+		main.chartEndDay++;
+    	if (main.chartEndDay > 30) {
+    		main.chartEndDay = 0;
+    		main.chartEndMonth++;
+    		if (main.chartStartMonth > 12) {
+    			main.chartEndMonth = 0;
+    			main.chartEndYear++;
+    		}
+    	}
+	},
+
+	increaseStartDay : function() {
+		main.chartStartDay++;
+    	if (main.chartStartDay > 30) {
+    		main.chartStartDay = 0;
+    		main.chartStartMonth++;
+    		if (main.chartStartMonth > 12) {
+    			main.chartStartMonth = 0;
+    			main.chartStartYear++;
+    		}
+    	}
+	},
+
+	decreaseEndDay : function() {
+		main.chartEndDay--;
+    	if (main.chartEndDay < 0) {
+    		main.chartEndDay = 30;
+    		main.chartEndMonth--;
+    		if (main.chartEndMonth < 0) {
+    			main.chartEndMonth = 12;
+    			main.chartEndYear--;
+    		}
+    	}
+	},
+
+	decreaseStartDay : function() {
+		main.chartStartDay--;
+    	if (main.chartStartDay < 0) {
+    		main.chartStartDay = 30;
+    		main.chartStartMonth--;
+    		if (main.chartStartMonth < 0) {
+    			main.chartStartMonth = 12;
+    			main.chartStartYear--;
+    		}
+    	}
+	},
+
+	startSimulation : function() {
+		if (main.chart) {
+			//Simulate live trading
+			main.interval = setInterval(function() {
+			    main.increaseEndDay();
+			    main.increaseStartDay();
+			    main.reloadChart();
+			}, main.frequency);	
+		}
+	},
+
+	stopSimulation : function() {
+		clearInterval(main.interval);
+	},
+
 	initialize : function() {
+		main.open = $('#open');
+		main.close = $('#close');
+		main.low = $('#low');
+		main.high = $('#high');
+
+		Number.prototype.format = function(n, x) {
+		    var re = '\\d(?=(\\d{' + (x || 3) + '})+' + (n > 0 ? '\\.' : '$') + ')';
+		    return this.toFixed(Math.max(0, ~~n)).replace(new RegExp(re, 'g'), '$&,');
+		};
+
+		main.chartEndDate = main.chartEndYear + '-' + main.chartEndMonth + '-' + main.chartEndDay;
 		main.chartStartDate = main.chartStartYear + '-' + main.chartStartMonth + '-' + main.chartStartDay;
 
+		//Rewrite better implementation 
 		$('.chart').on('mousewheel', function(event) {
 
 		    if (event.deltaY > 0) {
-		    	main.chartStartDay++;
-		    	if (main.chartStartDay > 30) {
-		    		main.chartStartDay = 0;
-		    		main.chartStartMonth++;
-		    		if (main.chartStartMonth > 12) {
-		    			main.chartStartMonth = 0;
-		    			main.chartStartYear++;
-		    		}
-		    	}
-
-		    	main.chartEndDay--;
-		    	if (main.chartEndDay < 0) {
-		    		main.chartEndDay = 30;
-		    		main.chartEndMonth--;
-		    		if (main.chartEndMonth < 0) {
-		    			main.chartEndMonth = 12;
-		    			main.chartEndYear--;
-		    		}
-		    	}
+		    	main.increaseEndDay();
 		    } else {
-		    	main.chartStartDay--;
-		    	if (main.chartStartDay < 0) {
-		    		main.chartStartDay = 30;
-		    		main.chartStartMonth--;
-		    		if (main.chartStartMonth < 0) {
-		    			main.chartStartMonth = 12;
-		    			main.chartStartYear--;
-		    		}
-		    	}
+		    	main.decreaseStartDay();
 		    }
 
-		    main.chartStartDate = main.chartStartYear + '-' + main.chartStartMonth + '-' + main.chartStartDay;
-	    	main.timeScale.domain([main.timeFormat.parse(main.chartStartDate), main.timeFormat.parse(main.chartEndDate)]);
-
-			var xAxis = d3.svg.axis()
-						.scale(main.timeScale)
-						.orient("bottom")
-						.tickSize(-main.height, 0, 0);
-
-
-			main.chart.selectAll('.x.axis')
-	    		.call(xAxis);
-
-	    	$('.ticker').empty();
-
-	    	main.createBars(main.data);
+		    main.reloadChart();
 		});
 
 		$('#btn_chart').click(function( event ) {
@@ -92,6 +136,45 @@ var main = {
 	        }
 	    });
 
+
+		$('#simulatelive').click(function(event) {
+			/* Act on the event */
+			if ($('#simulatelive').prop('checked')) {
+				main.startSimulation();
+			} else {
+				main.stopSimulation();
+			}
+		});
+
+		$('#5s').click(function(event) {
+			/* Act on the event */
+			main.frequency = 5000;
+		});
+
+
+		$('#3s').click(function(event) {
+			/* Act on the event */
+			main.frequency = 1000;
+		});
+	},
+
+	reloadChart : function() {
+		main.chartEndDate = main.chartEndYear + '-' + main.chartEndMonth + '-' + main.chartEndDay;
+    	main.chartStartDate = main.chartStartYear + '-' + main.chartStartMonth + '-' + main.chartStartDay;
+    	main.timeScale.domain([main.timeFormat.parse(main.chartStartDate), main.timeFormat.parse(main.chartEndDate)]);
+
+		var xAxis = d3.svg.axis()
+					.scale(main.timeScale)
+					.orient("bottom")
+					.tickSize(-main.height, 0, 0);
+
+
+		main.chart.selectAll('.x.axis')
+    		.call(xAxis);
+
+    	$('.ticker').empty();
+
+    	main.createBars(main.data);
 	},
 
 	getHistory : function(symbol) {
@@ -110,7 +193,17 @@ var main = {
 		});
 	},
 
+	toggleLoading : function ( bool ) {
+		if (bool) {
+			$('#dimload').addClass('active');
+		} else {
+			$('#dimload').removeClass('active');
+		}
+	},
+
 	createChart : function( data ) {
+		main.toggleLoading(true);
+
 		main.margin = {top: 20, right: 30, bottom: 30, left: 40},
     		main.width = screen.width - main.margin.left - main.margin.right,
     		main.height = 700 - main.margin.top - main.margin.bottom,
@@ -174,9 +267,13 @@ var main = {
 		    chart.append('bars');
 
 		    main.chart = chart;
+
+		    main.toggleLoading(false);
 	},
 
 	createBars : function(data) {
+		main.toggleLoading(true);
+
 		var bar = main.chart.selectAll('bars')
 						.data( data )
 						.enter().append('g')
@@ -213,6 +310,14 @@ var main = {
 							}
 						});
 
+			bar.on('mouseover', function (d) {
+				main.open.html('$' + parseInt(d.Open).format(1));
+				main.close.html('$' + parseInt(d.Close).format(1));
+				main.high.html('$' + parseInt(d.High).format(1));
+				main.low.html('$' + parseInt(d.Low).format(1))
+			});
+
+		main.toggleLoading(false);
 
 			/*
 			bar.append('text')
